@@ -1,15 +1,26 @@
 #include "20161622.h"
+#include "Dir.h"
 #define COMMANDSIZE 55
-
+ 
+int Input();
 
 void Help();
-int Input();
 int Dir();
-int Quit();
+
+//int History();
+
+//struct 
 
 
 char command[ COMMANDSIZE ];
-char com_init[COMMANDSIZE]={'\0', };
+char *com;
+
+
+char *start;
+char *end;
+char *left;
+
+int IsError(int mode, char *ckstr );
 
 int main(){
 	while(1){
@@ -25,9 +36,11 @@ int main(){
 				Dir();
 				break;
 			case 3:
-				Quit();
+				return 0;
 				break;
-
+			case 4:
+//				History();
+				break;
 		}
 	}
 }
@@ -45,19 +58,34 @@ int Input(){
 		command[tmp_i++] = tmp_ch;
 
 		if(tmp_i>=COMMANDSIZE-1)	printf("Your command is too long!\n");
+		//error message
 	}
 	command[tmp_i] = '\0';
 
+	if(!strcmp(command,help[0])||!strcmp(command, help[1])) return 1;
+	else if(!strcmp(command,dir[0]) || !strcmp(command, dir[1])) return 2;
+	else if(!strcmp(command,quit[0])|| !strcmp(command, quit[1])) return 3;
+	else if(!strcmp(command,history[0])||!strcmp(command,history[1])) return 4;
+	else if(strrchr(command, ',')!=NULL){
+		com=strtok(command," ");
 
-	if(!strcmp(command,h)||!strcmp(command, help)) return 1;
-	else if(!strcmp(command,d)||!strcmp(command,dir)) return 2;
-	else if(!strcmp(command,hi)||!strcmp(command,history)) return 3;
-	else if(!strcmp(command,du)||!strcmp(command,dump)) return 4;
-//	else if() return 5;
-//	else if() return 6;
-//	else if() return 7;
-//	else if() return 8;
-	else return 0;
+		if(!strcmp(com,dump[0])|| !strcmp(com,dump[1])){
+			printf("hhh");
+			start = strtok(command, " ");
+			if(IsError(1, start)) return -1;
+			if(start != NULL){
+				end = strtok(command, " ");
+				if(end != NULL && IsError(1, end) ) return -1;
+
+				left = strtok(command, " ");
+				if(left != NULL ) return -1;
+			}
+			printf("s: %s e: %s l: %s\n",start,end,left);
+		}
+
+	}
+
+	else return -1;
 }
 
 void Help(){
@@ -74,10 +102,24 @@ void Help(){
 			);
 }
 
+int IsError(int mode, char *ckstr ){
+	/*
+	 *mode 1: is dec?
+	 *mode 2: is hex?
+	 */
+	switch(mode){
+		case 1:
+			if(ckstr[0]>='0'&&ckstr[0]<='9');
+			break;
+		case 2:
+
+			break;
+
+	}
+}
+
 int Dir(){
+	
 
 }
 
-int Quit(){
-
-}
