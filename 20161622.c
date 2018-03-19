@@ -1,11 +1,14 @@
 #include "20161622.h"
-#include "Dir.h"
-#define COMMANDSIZE 55
+//#include "Dir.h"
  
-int Input();
 
+
+
+
+int Input();
 void Help();
 int Dir();
+int i;
 
 //int History();
 
@@ -13,17 +16,19 @@ int Dir();
 
 
 char command[ COMMANDSIZE ];
-char *com;
+char com[COMMANDSIZE];
 
+void Init(){
+	for( i=0;i<MAX_PARAMETER ; i++){
+		par[i][0] = '\0';
 
-char *start;
-char *end;
-char *left;
+	}
+}
 
-int IsError(int mode, char *ckstr );
 
 int main(){
 	while(1){
+		Init();
 		printf("sicsim> ");
 		switch(Input()){
 			case 0: 
@@ -48,8 +53,7 @@ int main(){
 
 int Input(){
 	char tmp_ch; 	//input char
-	int tmp_i=0;	//command index
-	
+	int tmp_i=0;	//index
 	
 
 	while(1){
@@ -62,28 +66,58 @@ int Input(){
 	}
 	command[tmp_i] = '\0';
 
-	if(!strcmp(command,help[0])||!strcmp(command, help[1])) return 1;
-	else if(!strcmp(command,dir[0]) || !strcmp(command, dir[1])) return 2;
-	else if(!strcmp(command,quit[0])|| !strcmp(command, quit[1])) return 3;
-	else if(!strcmp(command,history[0])||!strcmp(command,history[1])) return 4;
-	else if(strrchr(command, ',')!=NULL){
-		com=strtok(command," ");
+	if(!strcmp(command,str_h[0]) || !strcmp(command, str_h[1]))			return H;
+	else if(!strcmp(command,str_d[0]) || !strcmp(command, str_d[1]))	return D;
+	else if(!strcmp(command,str_q[0]) || !strcmp(command, str_q[1]))	return Q;
+	else if(!strcmp(command,str_hi[0]) || !strcmp(command, str_hi[1]))	return HI;
+	
+	else if(!strcmp( command, str_reset))						return RESET;
+	else if(!strcmp( command, str_opcodemnemonic))			return OPCODEMNEMONIC;
+	else if(!strcmp( command, str_opcodelist))				return OPCODELIST;
+	
+	else if(strrchr(command, ' ')!=NULL){
+		//string token
+		i=-1;
+		tk[++i] =strtok(command, " ,");
+		while(tk[i] != NULL){
+			if(i==0) strcpy(com,tk[i]);
+			else if(i<4) strcpy(par[i-1],tk[i]);
+			else if(i>=4) return -1;
+			tk[++i] = strtok(NULL, " ,");
+		}
+		printf("%s : %s %s %s",com,par[0],par[1],par[2]);		////////////debug
+		//command check
 
-		if(!strcmp(com,dump[0])|| !strcmp(com,dump[1])){
-			printf("hhh");
-			start = strtok(command, " ");
-			if(IsError(1, start)) return -1;
-			if(start != NULL){
-				end = strtok(command, " ");
-				if(end != NULL && IsError(1, end) ) return -1;
-
-				left = strtok(command, " ");
-				if(left != NULL ) return -1;
+		if(!strcmp(com,str_du[0])||!strcmp(com,str_du[1])){
+			if(par[0]==NULL)		return DU;
+			else if(!IsHex(par[0])) return -1;
+			else{
+				if( (IsHex(par[1]) && par[2]==NULL) || 
+					par[1]==NULL)	return DU;
+				else				return -1;
 			}
-			printf("s: %s e: %s l: %s\n",start,end,left);
+		}//processing command "dump"
+
+		else if(!strcmp(com,str_e[0]) || !strcmp(com,str_e[1])){
+			if(!IsHex(par[0]) || !IsHex(par[1]) || par[2]!=NULL)
+				return -1;
+			else {
+				strcpy(addr,par[0]);
+				strcpy(val,par[1]);
+				return DU;
+			}
 		}
 
-	}
+		else if(!strcmp(com,str_f[0]) || !strcmp(com,str_f[1]) ){
+			if(!IsHex(par[0]) || !IsHex(par[1])
+					|| !IsHex(par[2]) || par[3]!=NULL)
+				return -1;
+			else{
+				return F;
+			}
+		}
+	
+	}//processing command "edit"
 
 	else return -1;
 }
@@ -102,20 +136,8 @@ void Help(){
 			);
 }
 
-int IsError(int mode, char *ckstr ){
-	/*
-	 *mode 1: is dec?
-	 *mode 2: is hex?
-	 */
-	switch(mode){
-		case 1:
-			if(ckstr[0]>='0'&&ckstr[0]<='9');
-			break;
-		case 2:
+int IsHex( char *ckstr ){
 
-			break;
-
-	}
 }
 
 int Dir(){
