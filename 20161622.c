@@ -151,11 +151,24 @@ int IsHex( char *ckstr ){
 }
 
 int Dir(){
-	DIR* dir = opendir(".");
+	struct dirent *dir_ent;		//directory entry pointer
+	struct stat dir_stat;		//directory 
+	DIR* dir_p = opendir("."); 	//directory pointer
+	
+	if(dir_p== NULL) return -1;
+	
+	while(dir_ent = readdir(dir_p)){
+		stat(dir_ent->d_name, &dir_stat);
 
-	while(){
+		if(S_ISDIR(dir_stat.st_mode))
+			printf("%s/\n",dir_ent->d_name);
+		else if(dir_stat.st_mode & S_IXUSR)
+			printf("%s*\n",dir_ent->d_name);
+		else
+			printf("%s\n",dir_ent->d_name);
 
 	}
+
 
 }
 
