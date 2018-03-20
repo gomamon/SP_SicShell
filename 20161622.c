@@ -1,7 +1,7 @@
 #include "20161622.h"
 //#include "Dir.h"
- 
-
+#include <dirent.h>
+#include <sys/stat.h>
 
 
 
@@ -30,20 +30,23 @@ int main(){
 	while(1){
 		Init();
 		printf("sicsim> ");
+		
+		//printf("%d",Input());
+		
 		switch(Input()){
 			case 0: 
 				continue;
 				break;
-			case 1:
+			case H:
 				Help();
 				break;
-			case 2:
+			case D:
 				Dir();
 				break;
-			case 3:
+			case Q:
 				return 0;
 				break;
-			case 4:
+			case HI:
 //				History();
 				break;
 		}
@@ -89,17 +92,17 @@ int Input(){
 		//command check
 
 		if(!strcmp(com,str_du[0])||!strcmp(com,str_du[1])){
-			if(par[0]==NULL)		return DU;
+			if(par[0][0]=='\0')		return DU;
 			else if(!IsHex(par[0])) return -1;
 			else{
-				if( (IsHex(par[1]) && par[2]==NULL) || 
-					par[1]==NULL)	return DU;
+				if( (IsHex(par[1]) && par[2][0]=='\0') || 
+					par[1][0]=='\0')	return DU;
 				else				return -1;
 			}
 		}//processing command "dump"
 
 		else if(!strcmp(com,str_e[0]) || !strcmp(com,str_e[1])){
-			if(!IsHex(par[0]) || !IsHex(par[1]) || par[2]!=NULL)
+			if(!IsHex(par[0]) || !IsHex(par[1]) || par[2][0]!='\0')
 				return -1;
 			else {
 				strcpy(addr,par[0]);
@@ -137,11 +140,22 @@ void Help(){
 }
 
 int IsHex( char *ckstr ){
-
+	if(strlen(ckstr) ==2){
+		for(i=0; i<2; i++){
+			if(ckstr[i]<'0' || (ckstr[i] > '9' && ckstr[i] <'A') || ckstr[i]>'Z')
+				return 0;
+		}
+		return 1;
+	}
+	else return 0;
 }
 
 int Dir(){
-	
+	DIR* dir = opendir(".");
+
+	while(){
+
+	}
 
 }
 
