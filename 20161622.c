@@ -2,21 +2,32 @@
 //#include "Dir.h"
 #include <dirent.h>
 #include <sys/stat.h>
+#include <stdlib.h>
+typedef struct HistoryNode{
+	char data[COMMANDSIZE];
+	struct HistoryNode *next;
+}his_node;
 
 
 
 int Input();
+
 void Help();
 int Dir();
-int i;
-
-//int History();
+int History();
 
 //struct 
 
+int i;
+
+//History();
+his_node* head = NULL;
+his_node* rear = NULL;
 
 char command[ COMMANDSIZE ];
 char com[COMMANDSIZE];
+
+
 
 void Init(){
 	for( i=0;i<MAX_PARAMETER ; i++){
@@ -25,16 +36,32 @@ void Init(){
 	}
 }
 
+void AddHistory(){
+	his_node *new = (his_node*)malloc(sizeof(his_node));
+	strcpy(new->data, command);
+	new->next = NULL;
+
+	if(head == NULL){
+		head = new;
+		rear = new;
+	}
+	else{
+		rear->next = new;
+		rear = new;
+	}
+}
 
 int main(){
+	int mode;
 	while(1){
 		Init();
 		printf("sicsim> ");
-		
+		mode = Input();
+		printf("mode: %d\n",mode);
 		//printf("%d",Input());
-		
-		switch(Input()){
-			case 0: 
+		if(mode!=-1)AddHistory();	
+		switch(mode){
+			case -1: 
 				continue;
 				break;
 			case H:
@@ -47,7 +74,7 @@ int main(){
 				return 0;
 				break;
 			case HI:
-//				History();
+				History();
 				break;
 		}
 	}
@@ -168,7 +195,17 @@ int Dir(){
 			printf("%s\n",dir_ent->d_name);
 
 	}
-
-
 }
 
+int History(){
+	his_node* hp;
+	int cnt=0;
+	if(head==NULL) return 0;
+	
+	for(hp = head ; hp!= NULL ;hp = hp->next){
+		printf("%-3d %s\n",++cnt,hp->data);
+	}
+	
+	
+	
+}
