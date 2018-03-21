@@ -16,7 +16,10 @@ int Input();
 void Help();
 int Dir();
 int History();
-int Dump();
+void Dump();
+void Edit();
+void Fill();
+void Reset();
 //struct 
 
 //int i;
@@ -35,41 +38,40 @@ void Init(){
 	for( i=0;i<MAX_PARAMETER ; i++){
 		par[i][0] = '\0';
 	}
-	start[0] = '\0';
-	end[0] = '\0';
 }
 
 void MemInit(){
 	int i=0,j,k;
-	char *tmpstr1="000000";
-	char *tmpstr2="00";
+	char tmpstr1[] ="000000";
+	char tmpstr2[]="00";
 	int mod,div;
 
-	printf("hi");
+//	printf("hi");
 
-//	for(i =0; i<2 ; i++){
-		DecToHex(&tmpstr1, i*16);
-//	}
+	for(i =0; i<65536 ; i++){
+		DecToHex(tmpstr1, i*16);
+		strcpy(mem_addr[i],tmpstr1);
+	}
 	for(i=0; i<MAX_MEMORY ; i++)
 		strcpy(mem[i],tmpstr2);
 
 		
 }
 
-void DecToHex(char**hex,int dec){
-	char *init ="000000";
+void DecToHex(char*hex,int dec){
+	char init[] ="000000";
 	char src;
-	int i=0, mod;
+	int i=5, mod;
 
 	while(1){
-		printf("wwwwww");
+	//	printf("wwwwww");
 		if(dec==0) break;
 		mod = dec%16;
 		dec/=16;
-		src = (i>9) ? i+'A' : i+'0';
-		init[i++] = src;
+		src = (mod>9) ? mod-10+'A' : mod+'0';
+		init[i--] = src;
 	}
-	strcpy(*hex,init);
+	strcpy(hex,init);
 }
 
 
@@ -117,6 +119,12 @@ int main(){
 			case DU:
 				Dump();
 				break;
+			case E:
+				Edit();
+			case F:
+				Fill();
+			case RESET:
+				Reset();
 		}
 	}
 }
@@ -147,7 +155,6 @@ int Input(){
 	else if(!strcmp( command, str_opcodelist))				return OPCODELIST;
 	
 	else if(!strcmp(command,str_du[0]) || !strcmp(command,str_du[1]) ) return DU;
-
 	else if(strrchr(command, ' ')!=NULL){
 		//string token
 		i=-1;
@@ -158,7 +165,6 @@ int Input(){
 			else if(i>=4) return -1;
 			tk[++i] = strtok(NULL, " ,");
 		}
-		printf("%s : %s %s %s",com,par[0],par[1],par[2]);		////////////debug
 		//command check
 
 		if(!strcmp(com,str_du[0])||!strcmp(com,str_du[1])){
@@ -175,15 +181,14 @@ int Input(){
 			if(!IsHex(par[0]) || !IsHex(par[1]) || par[2][0]!='\0')
 				return -1;
 			else {
-				strcpy(addr,par[0]);
-				strcpy(val,par[1]);
-				return DU;
+				return E;
 			}
 		}
 
 		else if(!strcmp(com,str_f[0]) || !strcmp(com,str_f[1]) ){
+			printf("||%s %s %s||\n",par[0],par[1],par[2]);
 			if(!IsHex(par[0]) || !IsHex(par[1])
-					|| !IsHex(par[2]) || par[3]!=NULL)
+					|| !IsHex(par[2]) || par[3][0]!='\0')
 				return -1;
 			else{
 				return F;
@@ -211,9 +216,9 @@ void Help(){
 
 int IsHex( char *ckstr ){
 	int i;
-	printf("%s:%d\n",ckstr,(int)strlen(ckstr));
+	//printf("%s:%d\n",ckstr,(int)strlen(ckstr));
 	for(i=0; i<(int)strlen(ckstr); i++){
-		if(ckstr[i]<'0' || (ckstr[i] > '9' && ckstr[i] <'A') || ckstr[i]>'Z')
+		if(ckstr[i]<'0' || (ckstr[i] > '9' && ckstr[i] <'A') || (ckstr[i]>'F'&&ckstr[i]<'a') || ckstr[i]>'f')
 			return 0;
 	}
 	return 1;
@@ -249,49 +254,109 @@ int History(){
 	}		
 }
 
-int Dump(){
+void Dump(){
 	int i,j;
 	int s=0, e=0;
-
+	char start[10];
+	char end[10];
 	strcpy(start, par[0]);
 	strcpy(end, par[1]);
 	
-	/*processing start, end*/
+	/****processing start, end******/
 	if(start[0] == '\0'){
 		s = last_addr+1;
 		e = last_addr+160;
 	}
 	else{
-		s = HexToDex(start);
+		s = HexToDec(start);
 		if(end[0]=='\0') e = s+159; 
-		else	e = HexToDex(end);
+		else	e = HexToDec(end);
 	}
-
-	/*print memory*/
+	printf("s: %d e : %d\n", s,e);
+	
+	/******print memory******/
 	for(i=s ;i<=e; i++){
 		if(i==s){
 			printf("%s ", mem_addr[i/16]);
 			if(i%16!=0){
-				for(j=i/16 ;j<i ; j++)
+				for(j=0 ;j<i%16 ; j++)
 					printf("   ");
 			}
-			printf("%s",mem[i]);
+			printf("%s ",mem[i]);
+			if(i%16==15) PrintASCII(s,e,i-i%16);
 			continue;
 		}
 		if(i%16==0)
-			printf("\n%s ", mem_addr[i/16]);
+			printf("%s ", mem_addr[i/16]);
 		printf("%s ",mem[i]);
-	}
-	puts("");
+		if(i%16==15) PrintASCII(s,e,i-i%16);
+	}	//print from s to e
+	if(e%16!=15){ 
+		
+		for(; i<e-e%16+16; i++)
+			printf("   ");
+		PrintASCII(s,e,e-e%16);
+	}	//print rest
+	last_addr = e;
 }
 
-int HexToDex(char* hex){
+
+void Edit(){
+	char val[8], addr[8];
+	strcpy(addr, par[0]);
+	strcpy(val, par[1]);
+	
+	strcpy(mem[HexToDec(addr)],val);
+}
+
+void PrintASCII(int s, int e, int addr ){
 	int i;
-	int res=0;
-	for(i=0; i<strlen(hex); i++){
-		if(hex[i]=='\0') break;
-		res *= 16;
-		res += hex[i];
+	int dec;
+	printf("; ");
+	for( i=addr; i < addr+16 ; i++){
+		dec = HexToDec(mem[i]);
+		if( (32<=dec && dec<=126) && (s<=i&&i<=e) )	// 20~7E 
+			printf("%c",dec);
+		else	 printf(".");
 	}
-	return res;
+	puts("");
+
+}
+
+void Fill(){
+	int i,s,e;
+	char start[8],end[8],value[8];
+	strcpy(start, par[0]);
+	strcpy(end, par[1]);
+	strcpy(value, par[2]);
+	
+	printf("%s",value);
+	s = HexToDec(start);
+	e = HexToDec(end);
+	for(i=s; i<=e ; i++){
+		strcpy(mem[i],value);
+	}
+}
+
+int HexToDec(char* hex){
+	int i;
+	int tmp, dec=0;
+	for(i= 0 ; i< (int)strlen(hex); i++){
+		if(hex[i]=='\0') break;
+		tmp=hex[i];
+		if('a'<=tmp && tmp<='f') tmp = tmp - 'a' + 10;
+		else if('A'<=tmp && tmp<='F') tmp = tmp - 'A' +10;
+		else if('0'<=tmp && tmp<= '9') tmp -= '0';
+		dec *= 16;
+		dec += tmp;
+	}
+	return dec;
+}
+
+void Reset(){
+	int i=0;
+	char tmpstr[] = "00";
+	for(i=0 ; i<MAX_MEMORY ; i++){
+		strcpy(mem[i],tmpstr);
+	}
 }

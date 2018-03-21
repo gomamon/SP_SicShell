@@ -42,10 +42,6 @@ char *str_opcodemnemonic = "opcode mnemonic";
 char *str_opcodelist = "opcodelist";
 
 int last_addr=-1;
-char addr[2];
-char start[3];
-char end[3];
-char val[3];
 
 char par[5][COMMANDSIZE];
 char *tk[MAX_TOKEN]; //string token
@@ -53,7 +49,6 @@ char *tk[MAX_TOKEN]; //string token
 
 
 int IsHex(char *ckstr );
-int HexToDex(char *hex);
-void DecToHex(char **hex, int dec);
-
-
+int HexToDec(char *hex);
+void DecToHex(char *hex, int dec);
+void PrintASCII(int s, int e, int addr);
