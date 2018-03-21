@@ -4,14 +4,11 @@
 #define COMMANDSIZE 55
 #define MAX_TOKEN 50
 #define MAX_PARAMETER 5
+#define MAX_MEMORY 1048576 
 
 
-typedef struct{
-	char addr[6];
-	char data[17][3];
-}MEM;
-
-MEM mem[65536];
+char mem[ MAX_MEMORY ][3];
+char mem_addr[65536][8];
 
 enum COMMANDTYPE {
 	H = 1,
@@ -44,7 +41,7 @@ char *str_reset = "reset";
 char *str_opcodemnemonic = "opcode mnemonic";
 char *str_opcodelist = "opcodelist";
 
-int last_addr=0;
+int last_addr=-1;
 char addr[2];
 char start[3];
 char end[3];
@@ -56,8 +53,7 @@ char *tk[MAX_TOKEN]; //string token
 
 
 int IsHex(char *ckstr );
-
-
-
+int HexToDex(char *hex);
+void DecToHex(char **hex, int dec);
 
 
