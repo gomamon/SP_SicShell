@@ -3,6 +3,7 @@
 #include <dirent.h>
 #include <sys/stat.h>
 #include <stdlib.h>
+
 typedef struct HistoryNode{
 	char data[COMMANDSIZE];
 	struct HistoryNode *next;
@@ -15,10 +16,10 @@ int Input();
 void Help();
 int Dir();
 int History();
-
+int Dump();
 //struct 
 
-int i;
+//int i;
 
 //History();
 his_node* head = NULL;
@@ -30,11 +31,38 @@ char com[COMMANDSIZE];
 
 
 void Init(){
+	int i;
 	for( i=0;i<MAX_PARAMETER ; i++){
 		par[i][0] = '\0';
+	}
+	start[0] = '\0';
+	end[0] = '\0';
+}
 
+void MemInit(){
+	int i,j,k;
+	char tmpstr1[]="000000";
+	char tmpstr2[]="00";
+	int mod,div;
+
+	for(i =0; i<65536 ; i++){
+
+		for(j=4 ; j>=0; j--){
+			mod = 1;
+
+			for(k = 0; k<=j; k++)
+				mod*=16; 	
+			div = mod/16;
+			tmpstr1[i] = ( (i%mod)/div > 9) ?  (i%mod)/div+7  :  (i%mod)/div; 
+		}
+
+		strcpy(mem->addr, tmpstr1);
+		for( j=0; j<16; j++)	strcpy(mem->data[j],tmpstr2);			
 	}
 }
+
+
+
 
 void AddHistory(){
 	his_node *new = (his_node*)malloc(sizeof(his_node));
@@ -84,7 +112,7 @@ int main(){
 int Input(){
 	char tmp_ch; 	//input char
 	int tmp_i=0;	//index
-	
+	int i;	
 
 	while(1){
 		scanf("%c",&tmp_ch);
@@ -167,6 +195,7 @@ void Help(){
 }
 
 int IsHex( char *ckstr ){
+	int i;
 	if(strlen(ckstr) ==2){
 		for(i=0; i<2; i++){
 			if(ckstr[i]<'0' || (ckstr[i] > '9' && ckstr[i] <'A') || ckstr[i]>'Z')
@@ -204,8 +233,19 @@ int History(){
 	
 	for(hp = head ; hp!= NULL ;hp = hp->next){
 		printf("%-3d %s\n",++cnt,hp->data);
-	}
-	
-	
-	
+	}		
 }
+
+int Dump(){
+	int s=0, e=0;
+	strcpy(start, par[0]);
+	strcpy(end, par[1]);
+	
+	if(start[0] = '\0')
+		s = 
+	
+	
+	
+
+}
+

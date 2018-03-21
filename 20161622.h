@@ -5,6 +5,14 @@
 #define MAX_TOKEN 50
 #define MAX_PARAMETER 5
 
+
+typedef struct{
+	char addr[6];
+	char data[17][3];
+}MEM;
+
+MEM mem[65536];
+
 enum COMMANDTYPE {
 	H = 1,
 	D,
@@ -17,6 +25,8 @@ enum COMMANDTYPE {
 	OPCODEMNEMONIC,
 	OPCODELIST
 };
+
+
 
 
 
@@ -34,8 +44,7 @@ char *str_reset = "reset";
 char *str_opcodemnemonic = "opcode mnemonic";
 char *str_opcodelist = "opcodelist";
 
-
-
+int last_addr=0;
 char addr[2];
 char start[3];
 char end[3];
@@ -47,3 +56,8 @@ char *tk[MAX_TOKEN]; //string token
 
 
 int IsHex(char *ckstr );
+
+
+
+
+
