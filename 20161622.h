@@ -5,7 +5,7 @@
 #define MAX_TOKEN 50
 #define MAX_PARAMETER 5
 #define MAX_MEMORY 1048576 
-
+#define HASH_SIZE 20
 
 char mem[ MAX_MEMORY ][3];
 
@@ -22,9 +22,19 @@ enum COMMANDTYPE {
 	OPCODELIST
 };
 
+typedef struct OpcodeList{
+	struct OpcodeList* next;
+	char* opcode[5];
+	char* mnemonic[10];
+	char* mode[5];
+}opcode_list;
 
 
-
+typedef struct{
+	int size;
+	opcode_list *next;
+}hash_table;
+hash_table *hash[20];
 
 /*command list*/
 char *str_h[] = {"h","help"};

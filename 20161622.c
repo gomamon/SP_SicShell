@@ -20,6 +20,9 @@ void Dump();
 void Edit();
 void Fill();
 void Reset();
+
+int OpcodeMnemonic();
+void Opcodelist();
 //struct 
 
 //int i;
@@ -38,15 +41,37 @@ void Init(){
 	for( i=0;i<MAX_PARAMETER ; i++){
 		par[i][0] = '\0';
 	}
+	
 }
 
 void MemInit(){
 	int i=0,j,k;
 	char tmp_str[]="00";
 	int mod,div;
-
+	
 	for(i=0; i<MAX_MEMORY ; i++)
 		strcpy(mem[i],tmp_str);
+}
+
+int MakeHashTable(){
+	FILE *fp;
+	char in1[5],in2[10],in3[5];
+	if(!fp)	return -1;
+	
+	for(int i=0; i<HASH_SIZE ; i++){
+		hash[i]->size = 0;
+		hash[i]->next = NULL;
+	}
+
+	while( fscanf(fp,"%s %s %s",in1,in2,in3)!=EOF ){
+		MakeOpcodeList(in1,in2,in3);
+
+	}
+}
+
+int MakeOpcodeList(char *opcode, char *mnemonic, char* mode){
+	malloc()
+
 }
 /*
 void DecToHex(char*hex,int dec){
@@ -353,4 +378,8 @@ void Reset(){
 	for(i=0 ; i<MAX_MEMORY ; i++){
 		strcpy(mem[i],tmpstr);
 	}
+}
+
+int OpcodeMnemonic(){
+	
 }
