@@ -54,24 +54,45 @@ void MemInit(){
 }
 
 int MakeHashTable(){
-	FILE *fp;
+	FILE *fp=fopen("opcode.txt","r");
 	char in1[5],in2[10],in3[5];
 	if(!fp)	return -1;
 	
 	for(int i=0; i<HASH_SIZE ; i++){
-		hash[i]->size = 0;
-		hash[i]->next = NULL;
+		hash[i].size = 0;
+		hash[i].head = NULL;
+		hash[i].rear = NULL;
 	}
 
 	while( fscanf(fp,"%s %s %s",in1,in2,in3)!=EOF ){
+	//	printf("%s %s %s",in1,in2,in3);
 		MakeOpcodeList(in1,in2,in3);
-
 	}
 }
 
-int MakeOpcodeList(char *opcode, char *mnemonic, char* mode){
-	malloc()
+void MakeOpcodeList(char* opcode, char*mnemonic, char* mode){
+	int i,idx=0;
+	opcode_list* new = (opcode_list*)malloc(sizeof(opcode_list));
 
+	for(i=0 ; i<(int)strlen(mnemonic) ; i++)
+		idx += mnemonic[i];
+	
+	idx%=HASH_MOD;
+
+	strcpy( new->opcode, opcode);
+	strcpy( (new->mnemonic), mnemonic);
+	strcpy( new->form , mode);
+	new->next = NULL;
+
+	hash[idx].size++;
+	if(hash[idx].head==NULL){
+		hash[idx].head = new;
+		hash[idx].rear = new;
+	}
+	else{
+		hash[idx].rear->next = new;
+		hash[idx].rear = new;
+	}
 }
 /*
 void DecToHex(char*hex,int dec){
@@ -106,6 +127,7 @@ void AddHistory(){
 int main(){
 	int mode;
 	MemInit();
+	MakeHashTable();
 	while(1){
 		Init();
 		printf("sicsim> ");
@@ -141,6 +163,14 @@ int main(){
 			case RESET:
 				Reset();
 				break;
+			case OPCODELIST:
+				Opcodelist();
+				break;
+			case OPCODEMNEMONIC:
+				OpcodeMnemonic();
+				break;
+				
+
 		}
 	}
 }
@@ -167,7 +197,6 @@ int Input(){
 	else if(!strcmp(command,str_hi[0]) || !strcmp(command, str_hi[1]))	return HI;
 	
 	else if(!strcmp( command, str_reset))						return RESET;
-	else if(!strcmp( command, str_opcodemnemonic))			return OPCODEMNEMONIC;
 	else if(!strcmp( command, str_opcodelist))				return OPCODELIST;
 	
 	else if(!strcmp(command,str_du[0]) || !strcmp(command,str_du[1]) ) return DU;
@@ -202,7 +231,7 @@ int Input(){
 		}
 
 		else if(!strcmp(com,str_f[0]) || !strcmp(com,str_f[1]) ){
-			printf("||%s %s %s||\n",par[0],par[1],par[2]);
+			//printf("||%s %s %s||\n",par[0],par[1],par[2]);
 			if(!IsHex(par[0]) || !IsHex(par[1])
 					|| !IsHex(par[2]) || par[3][0]!='\0')
 				return -1;
@@ -210,7 +239,12 @@ int Input(){
 				return F;
 			}
 		}
-	
+			
+		else if(!strcmp( command, str_opcodemnemonic)){
+			if(par[0][0] != '\0' && par[0][1] == '\0')
+				return -1;
+			return OPCODEMNEMONIC;
+		}
 	}//processing command "edit"
 
 	else return -1;
@@ -380,6 +414,39 @@ void Reset(){
 	}
 }
 
+void Opcodelist(){
+	int i=0,flag=0;;
+	opcode_list* tmp; 
+	for(i=0 ; i<HASH_MOD ; i++){
+		printf("%d : ",i);
+		flag = 0;
+		for(tmp = hash[i].head; tmp!=NULL ; tmp=tmp->next){
+			if(flag) printf(" -> ");
+			else flag = 1;
+			printf("[%s,%s]",tmp->mnemonic,tmp->opcode);	
+		}
+		puts("");
+	}
+}
+
 int OpcodeMnemonic(){
+	opcode_list* tmp;
+	char key[10];
+	int idx=0,i;
+
+	strcpy(key, par[0]);
+	
+	for( i=0; i<(int)strlen(key) ; i++)	
+		idx += key[i];
+	idx%=HASH_MOD;
+	for(tmp = hash[idx].head; tmp!=NULL; tmp = tmp->next){
+		if(!strcmp( key, tmp->mnemonic)) {
+			printf("opcode is %s\n",tmp->opcode);
+			return 1;
+		}
+	}
+	
+	printf("OPCODE not found\n");
 	
 }
+
