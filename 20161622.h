@@ -8,7 +8,6 @@
 
 
 char mem[ MAX_MEMORY ][3];
-char mem_addr[65536][8];
 
 enum COMMANDTYPE {
 	H = 1,

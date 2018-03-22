@@ -42,37 +42,25 @@ void Init(){
 
 void MemInit(){
 	int i=0,j,k;
-	char tmpstr1[] ="000000";
-	char tmpstr2[]="00";
+	char tmp_str[]="00";
 	int mod,div;
 
-//	printf("hi");
-
-	for(i =0; i<65536 ; i++){
-		DecToHex(tmpstr1, i*16);
-		strcpy(mem_addr[i],tmpstr1);
-	}
 	for(i=0; i<MAX_MEMORY ; i++)
-		strcpy(mem[i],tmpstr2);
-
-		
+		strcpy(mem[i],tmp_str);
 }
-
+/*
 void DecToHex(char*hex,int dec){
-	char init[] ="000000";
 	char src;
 	int i=5, mod;
 
-	while(1){
-	//	printf("wwwwww");
-		if(dec==0) break;
+	while(init){
 		mod = dec%16;
 		dec/=16;
-		src = (mod>9) ? mod-10+'A' : mod+'0';
-		init[i--] = src;
+		src = (mod>9) ? (mod-10+'A') : (mod + '0');
+		hex[i--] = src;
+
 	}
-	strcpy(hex,init);
-}
+}*/
 
 
 void AddHistory(){
@@ -121,10 +109,13 @@ int main(){
 				break;
 			case E:
 				Edit();
+				break;
 			case F:
 				Fill();
+				break;
 			case RESET:
 				Reset();
+				break;
 		}
 	}
 }
@@ -272,12 +263,12 @@ void Dump(){
 		if(end[0]=='\0') e = s+159; 
 		else	e = HexToDec(end);
 	}
-	printf("s: %d e : %d\n", s,e);
 	
 	/******print memory******/
 	for(i=s ;i<=e; i++){
 		if(i==s){
-			printf("%s ", mem_addr[i/16]);
+			printf("%05X ",i);
+			//printf("%s ", mem_addr[i/16]);
 			if(i%16!=0){
 				for(j=0 ;j<i%16 ; j++)
 					printf("   ");
@@ -287,7 +278,8 @@ void Dump(){
 			continue;
 		}
 		if(i%16==0)
-			printf("%s ", mem_addr[i/16]);
+			printf("%05X ",i);
+			//printf("%s ", mem_addr[i/16]);
 		printf("%s ",mem[i]);
 		if(i%16==15) PrintASCII(s,e,i-i%16);
 	}	//print from s to e
@@ -298,6 +290,7 @@ void Dump(){
 		PrintASCII(s,e,e-e%16);
 	}	//print rest
 	last_addr = e;
+	printf("s: %d e : %d\n", s,e);
 }
 
 
@@ -335,6 +328,7 @@ void Fill(){
 	e = HexToDec(end);
 	for(i=s; i<=e ; i++){
 		strcpy(mem[i],value);
+		printf("%s",mem[i]);
 	}
 }
 
