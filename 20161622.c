@@ -94,19 +94,6 @@ void MakeOpcodeList(char* opcode, char*mnemonic, char* mode){
 		hash[idx].rear = new;
 	}
 }
-/*
-void DecToHex(char*hex,int dec){
-	char src;
-	int i=5, mod;
-
-	while(init){
-		mod = dec%16;
-		dec/=16;
-		src = (mod>9) ? (mod-10+'A') : (mod + '0');
-		hex[i--] = src;
-
-	}
-}*/
 
 
 void AddHistory(){
@@ -354,6 +341,8 @@ void Dump(){
 
 
 void Edit(){
+	// Fuction to modify data in the memory
+
 	char val[8], addr[8];
 	strcpy(addr, par[0]);
 	strcpy(val, par[1]);
@@ -362,6 +351,8 @@ void Edit(){
 }
 
 void PrintASCII(int s, int e, int addr ){
+	// Function to output ASCII data of the line containing the address
+	
 	int i;
 	int dec;
 	printf("; ");
@@ -376,6 +367,8 @@ void PrintASCII(int s, int e, int addr ){
 }
 
 void Fill(){
+	//Function to fill from s(start) ~ e(end)
+
 	int i,s,e;
 	char start[8],end[8],value[8];
 	strcpy(start, par[0]);
@@ -392,6 +385,8 @@ void Fill(){
 }
 
 int HexToDec(char* hex){
+	//Function to convert Hexadecimal to Decimal
+
 	int i;
 	int tmp, dec=0;
 	for(i= 0 ; i< (int)strlen(hex); i++){
@@ -407,6 +402,8 @@ int HexToDec(char* hex){
 }
 
 void Reset(){
+	//Function to fill all memory '0'
+	
 	int i=0;
 	char tmpstr[] = "00";
 	for(i=0 ; i<MAX_MEMORY ; i++){
@@ -415,8 +412,11 @@ void Reset(){
 }
 
 void Opcodelist(){
-	int i=0,flag=0;;
-	opcode_list* tmp; 
+	//Function to print opcode list
+	
+	int i=0,flag=0; //i:index , flag: if flag is 1, print '->'
+	opcode_list* tmp; //opcode_list pointer for searching
+
 	for(i=0 ; i<HASH_MOD ; i++){
 		printf("%d : ",i);
 		flag = 0;
@@ -429,10 +429,16 @@ void Opcodelist(){
 	}
 }
 
-int OpcodeMnemonic(){
-	opcode_list* tmp;
-	char key[10];
-	int idx=0,i;
+
+
+int OpcodeMnemonic(){	
+	//Function to find opcode.
+	//if you find the opcode print and return 1.
+	//if the opcode is not exist, print error message and return 0.
+
+	opcode_list* tmp;	// opcode_list pointer for searching
+	char key[10];		// mnemonic of the opcode you want to obtain
+	int idx=0,i;		// idx: hash table index, i:index
 
 	strcpy(key, par[0]);
 	
@@ -444,9 +450,6 @@ int OpcodeMnemonic(){
 			printf("opcode is %s\n",tmp->opcode);
 			return 1;
 		}
-	}
-	
+	}	
 	printf("OPCODE not found\n");
-	
 }
-
