@@ -4,13 +4,6 @@
 #include <sys/stat.h>
 #include <stdlib.h>
 
-typedef struct HistoryNode{
-	char data[COMMANDSIZE];
-	struct HistoryNode *next;
-}his_node;
-
-
-
 int Input();
 
 void Help();
@@ -27,12 +20,6 @@ void Opcodelist();
 
 //int i;
 
-//History();
-his_node* head = NULL;
-his_node* rear = NULL;
-
-char command[ COMMANDSIZE ];
-char com[COMMANDSIZE];
 
 
 
@@ -41,14 +28,14 @@ void Init(){
 	for( i=0;i<MAX_PARAMETER ; i++){
 		par[i][0] = '\0';
 	}
-	
+
 }
 
 void MemInit(){
 	int i=0,j,k;
 	char tmp_str[]="00";
 	int mod,div;
-	
+
 	for(i=0; i<MAX_MEMORY ; i++)
 		strcpy(mem[i],tmp_str);
 }
@@ -57,7 +44,7 @@ int MakeHashTable(){
 	FILE *fp=fopen("opcode.txt","r");
 	char in1[5],in2[10],in3[5];
 	if(!fp)	return -1;
-	
+
 	for(int i=0; i<HASH_SIZE ; i++){
 		hash[i].size = 0;
 		hash[i].head = NULL;
@@ -65,7 +52,6 @@ int MakeHashTable(){
 	}
 
 	while( fscanf(fp,"%s %s %s",in1,in2,in3)!=EOF ){
-	//	printf("%s %s %s",in1,in2,in3);
 		MakeOpcodeList(in1,in2,in3);
 	}
 }
@@ -76,7 +62,7 @@ void MakeOpcodeList(char* opcode, char*mnemonic, char* mode){
 
 	for(i=0 ; i<(int)strlen(mnemonic) ; i++)
 		idx += mnemonic[i];
-	
+
 	idx%=HASH_MOD;
 
 	strcpy( new->opcode, opcode);
@@ -101,13 +87,40 @@ void AddHistory(){
 	strcpy(new->data, command);
 	new->next = NULL;
 
-	if(head == NULL){
-		head = new;
-		rear = new;
+	if(his_head == NULL){
+		his_head = new;
+		his_rear = new;
 	}
 	else{
-		rear->next = new;
-		rear = new;
+		his_rear->next = new;
+		his_rear = new;
+	}
+}
+
+void FreeHistory(){
+	his_node *tmp_p,*del_p;
+
+	if(his_head==NULL) return;
+	else{
+		tmp_p = his_head;
+		while(1){
+			if(tmp_p==NULL) return;
+			del_p = tmp_p;
+			tmp_p = tmp_p->next;
+			free(del_p);
+		}
+	}
+}
+void FreeHash(){
+	opcode_list *tmp_p, *del_p;
+	for(int i=0 ;i<HASH_SIZE ; i++){
+		tmp_p = hash[i].head;
+		while(1){
+			if(tmp_p == NULL) return;
+			del_p = tmp_p;
+			tmp_p = tmp_p->next;
+			free(del_p);
+		}
 	}
 }
 
@@ -119,7 +132,7 @@ int main(){
 		Init();
 		printf("sicsim> ");
 		mode = Input();
-		printf("mode: %d\n",mode);
+		//printf("mode: %d\n",mode);
 		//printf("%d",Input());
 		if(mode!=-1)AddHistory();	
 		switch(mode){
@@ -133,6 +146,8 @@ int main(){
 				Dir();
 				break;
 			case Q:
+				FreeHistory();
+				FreeHash();
 				return 0;
 				break;
 			case HI:
@@ -156,85 +171,192 @@ int main(){
 			case OPCODEMNEMONIC:
 				OpcodeMnemonic();
 				break;
-				
+
 
 		}
 	}
 }
+int ProcessCommand(char* cmd){
+	int i, j;
+	char *tk; //string token
+	char tmp[COMMANDSIZE];
+
+	/**Command TOKEN**/
+	i=-1;
+	strcpy(tmp, cmd);
+
+	tk = strtok(tmp, " \t");
+	if(!tk) return -1;
+	do{
+		if(i==-1) strcpy(cmd, tk);
+		else strcpy(par[i],tk);
+		i++;
+		if(i>=MAX_PARAMETER){
+			printf("UNKNOWN COMMAND!\n");
+			return -1;
+		}
+	}while(tk = strtok(NULL, " \t"));	
+
+	
+	if(cmd[0] == '\0') return -1;		
+
+	/**Check command {H = 0, D = 1, q = 2, ...  ,OPCODEMNEMONIC = 9 }**/
+	for(i=0; i<10 ;i++)
+		for(j=0 ; j<2 ; j++)
+			if(!strcmp(cmd, command_list[i][j]))
+				return CheckParameter(i);
+	
+	printf("UNKNOWN COMMAND!\n");
+	return -1;
+}
+
+
+int CheckParameter(int cmd_num){
+	switch(cmd_num){
+		case H:
+		case D:
+		case Q:
+		case HI:
+		case RESET:
+		case OPCODELIST:
+			if(par[0][0]=='\0')
+				return cmd_num;
+				 
+			printf("UNKNOWN COMMAND!\n");
+			return -1;
+			break;
+
+		case DU:
+			if(par[0][0] == '\0')
+				return cmd_num;
+			else if( IsHex(par[0]) ){
+				if( IsAddrLimitERROR( HexToDec(par[0]) ) )	return -1;
+				if(par[1][0]=='\0') 
+					return cmd_num;
+				else if( par[1][0] == ',' && IsHex(par[2]) && par[3][0]=='\0'){
+					if( IsAddrLimitERROR( HexToDec(par[2]) ) ) return -1;
+					if( IsAddrERROR( HexToDec(par[0]) ,HexToDec(par[2]) ) )	return -1;
+					return cmd_num;
+				}
+			}
+			printf("UNKNOWN COMMAND!\n");
+			return -1;
+			break;
+		case E:
+			if(IsHex(par[0]) && par[1][0] ==',' && IsHex(par[2]) && par[3][0] == '\0'){
+				if(IsAddrLimitERROR( HexToDec(par[0]) ))return -1;
+				if( IsDataLimitERROR( HexToDec(par[2]) ) )return -1;
+				return E;
+			}
+			printf("UNKNOWN COMMAND!\n");
+			return -1;
+			break;
+		case F:
+			if(IsHex(par[0]) && par[1][0] ==',' && IsHex(par[2]) 
+					&& par[3][0] ==',' && IsHex(par[4]) && par[5][0]=='\0'){
+
+				if(IsAddrLimitERROR( HexToDec(par[0]) ))return -1;
+				if( IsAddrLimitERROR( HexToDec(par[2]) ) )return -1;
+				if( IsAddrERROR( HexToDec(par[0]), HexToDec(par[2]) ) )return -1;
+				if( IsDataLimitERROR( HexToDec(par[4]) ) )	return -1;
+				return F;
+			}
+			printf("UNKNOWN COMMAND!\n");
+			return -1;
+			break;
+		case OPCODEMNEMONIC:
+			if(par[0][0]=='\0'){
+				printf("No input mnemonic\n");
+				return -1;
+			}
+			else if(par[1][0]=='\0'){
+				return OPCODEMNEMONIC; 
+			}
+			printf("UNKNOWN COMMAND!\n");
+			return -1;
+			break;
+		default:
+			printf("UNKNOWN COMMAND!\n");
+			return -1;
+			break;
+	}
+}
+int IsDataLimitERROR(int data){
+	//function to check data limit
+	//if data exceed limit(0x00 ~ 0xff), then return 1
+	//if not, return 0
+	
+	if(data<MAX_DATA)
+		return 0;
+	else{
+		printf("Exceede limit!\n");
+		return 1;
+	}
+}
+int IsAddrERROR(int s, int e){
+	//Function to check start address and end address
+	//If s is bigger than e, then return 1
+	//If not, return 0
+	
+	if( e < s){
+		printf("End address shouldn't be less than Start address!\n");
+		return 1;
+	}
+	return 0;
+}
+int IsAddrLimitERROR(int addr){
+	//function to check adrress limit
+	//if adddr exceed limit(0x00000 ~ 0xfffff), then return 1
+	//if not, return 0
+	
+	if(addr < MAX_MEMORY)
+		return 0;
+	else{
+		printf("Exceeded limit!\n");
+		return 1; 
+	}
+}
+
+
+int IsHex( char *ckstr ){
+	int i;
+	if(ckstr[0] == '\0') return 0;
+	for(i=0; i<(int)strlen(ckstr); i++){
+		if(ckstr[i]<'0' || (ckstr[i] > '9' && ckstr[i] <'A') || (ckstr[i]>'F'&&ckstr[i]<'a') || ckstr[i]>'f')
+			return 0;
+	}
+	return 1;
+}
 
 
 int Input(){
-	char tmp_ch; 	//input char
-	int tmp_i=0;	//index
-	int i;	
+	char ch_in; 	//input char
+	int i=0,j=0;	//i:index for cmd, j:index for command	
+	char cmd[COMMANDSIZE];	//String to process command efficiently
 
+	/**get command**/
 	while(1){
-		scanf("%c",&tmp_ch);
-		if(tmp_ch == '\n')	break;
-		command[tmp_i++] = tmp_ch;
-
-		if(tmp_i>=COMMANDSIZE-1)	printf("Your command is too long!\n");
-		//error message
+		scanf("%c",&ch_in);
+		if( ch_in == '\n')	break;
+		if( ch_in == ','){
+			cmd[i++] = ' '; 
+			cmd[i++] = ','; 
+			cmd[i++] = ' ';
+			command[j++] = ch_in;
+		}
+		else{
+			cmd[i++] = ch_in;
+			command[j++] = ch_in;
+		}
+		if(i>=COMMANDSIZE-1){
+			puts("UNKNOWN COMMAND");	
+			return -1;
+		}
 	}
-	command[tmp_i] = '\0';
+	cmd[i] = '\0';
+	command[j] = '\0';
+	return ProcessCommand(cmd);
 
-	if(!strcmp(command,str_h[0]) || !strcmp(command, str_h[1]))			return H;
-	else if(!strcmp(command,str_d[0]) || !strcmp(command, str_d[1]))	return D;
-	else if(!strcmp(command,str_q[0]) || !strcmp(command, str_q[1]))	return Q;
-	else if(!strcmp(command,str_hi[0]) || !strcmp(command, str_hi[1]))	return HI;
-	
-	else if(!strcmp( command, str_reset))						return RESET;
-	else if(!strcmp( command, str_opcodelist))				return OPCODELIST;
-	
-	else if(!strcmp(command,str_du[0]) || !strcmp(command,str_du[1]) ) return DU;
-	else if(strrchr(command, ' ')!=NULL){
-		//string token
-		i=-1;
-		tk[++i] =strtok(command, " ,");
-		while(tk[i] != NULL){
-			if(i==0) strcpy(com,tk[i]);
-			else if(i<4) strcpy(par[i-1],tk[i]);
-			else if(i>=4) return -1;
-			tk[++i] = strtok(NULL, " ,");
-		}
-		//command check
-
-		if(!strcmp(com,str_du[0])||!strcmp(com,str_du[1])){
-			if(par[0][0]=='\0')		return DU;
-			else if(!IsHex(par[0])) return -1;
-			else{
-				if( (IsHex(par[1]) && par[2][0]=='\0') || 
-					par[1][0]=='\0')	return DU;
-				else				return -1;
-			}
-		}//processing command "dump"
-
-		else if(!strcmp(com,str_e[0]) || !strcmp(com,str_e[1])){
-			if(!IsHex(par[0]) || !IsHex(par[1]) || par[2][0]!='\0')
-				return -1;
-			else {
-				return E;
-			}
-		}
-
-		else if(!strcmp(com,str_f[0]) || !strcmp(com,str_f[1]) ){
-			//printf("||%s %s %s||\n",par[0],par[1],par[2]);
-			if(!IsHex(par[0]) || !IsHex(par[1])
-					|| !IsHex(par[2]) || par[3][0]!='\0')
-				return -1;
-			else{
-				return F;
-			}
-		}
-			
-		else if(!strcmp( command, str_opcodemnemonic)){
-			if(par[0][0] != '\0' && par[0][1] == '\0')
-				return -1;
-			return OPCODEMNEMONIC;
-		}
-	}//processing command "edit"
-
-	else return -1;
 }
 
 void Help(){
@@ -248,26 +370,15 @@ void Help(){
 			"reset\n"
 			"opcode mnemonic\n"
 			"opcodelist\n"
-			);
+		  );
 }
-
-int IsHex( char *ckstr ){
-	int i;
-	//printf("%s:%d\n",ckstr,(int)strlen(ckstr));
-	for(i=0; i<(int)strlen(ckstr); i++){
-		if(ckstr[i]<'0' || (ckstr[i] > '9' && ckstr[i] <'A') || (ckstr[i]>'F'&&ckstr[i]<'a') || ckstr[i]>'f')
-			return 0;
-	}
-	return 1;
-}
-
 int Dir(){
 	struct dirent *dir_ent;		//directory entry pointer
 	struct stat dir_stat;		//directory 
 	DIR* dir_p = opendir("."); 	//directory pointer
-	
+
 	if(dir_p== NULL) return -1;
-	
+
 	while(dir_ent = readdir(dir_p)){
 		stat(dir_ent->d_name, &dir_stat);
 
@@ -284,9 +395,9 @@ int Dir(){
 int History(){
 	his_node* hp;
 	int cnt=0;
-	if(head==NULL) return 0;
-	
-	for(hp = head ; hp!= NULL ;hp = hp->next){
+	if(his_head==NULL) return 0;
+
+	for(hp = his_head ; hp!= NULL ;hp = hp->next){
 		printf("%-3d %s\n",++cnt,hp->data);
 	}		
 }
@@ -297,12 +408,13 @@ void Dump(){
 	char start[10];
 	char end[10];
 	strcpy(start, par[0]);
-	strcpy(end, par[1]);
-	
+	strcpy(end, par[2]);
+
 	/****processing start, end******/
 	if(start[0] == '\0'){
-		s = last_addr+1;
-		e = last_addr+160;
+		if(last_addr == MAX_MEMORY-1) s = 0;
+		else s = last_addr+1;
+		e = s+159;
 	}
 	else{
 		s = HexToDec(start);
@@ -310,49 +422,59 @@ void Dump(){
 		else	e = HexToDec(end);
 	}
 	
-	/******print memory******/
+	if(e>= MAX_MEMORY){
+		e = MAX_MEMORY-1;
+	}
+
+	PrintData(s,e);
+	last_addr = e;
+}
+
+void PrintData(int s,int e){
+	//Function to print according to format the data in memory(mem) at address(addr)
+	int i,j;
+
 	for(i=s ;i<=e; i++){
 		if(i==s){
 			printf("%05X ",i);
-			//printf("%s ", mem_addr[i/16]);
 			if(i%16!=0){
 				for(j=0 ;j<i%16 ; j++)
 					printf("   ");
 			}
-			printf("%s ",mem[i]);
+			
+			printf("%02X ",HexToDec(mem[i]));
+			
 			if(i%16==15) PrintASCII(s,e,i-i%16);
 			continue;
 		}
+
 		if(i%16==0)
 			printf("%05X ",i);
-			//printf("%s ", mem_addr[i/16]);
-		printf("%s ",mem[i]);
+
+		printf("%02X ",HexToDec(mem[i]));
+		
 		if(i%16==15) PrintASCII(s,e,i-i%16);
 	}	//print from s to e
 	if(e%16!=15){ 
-		
+
 		for(; i<e-e%16+16; i++)
 			printf("   ");
 		PrintASCII(s,e,e-e%16);
 	}	//print rest
-	last_addr = e;
-	printf("s: %d e : %d\n", s,e);
 }
-
-
 void Edit(){
 	// Fuction to modify data in the memory
 
 	char val[8], addr[8];
 	strcpy(addr, par[0]);
-	strcpy(val, par[1]);
-	
+	strcpy(val, par[2]);
+
 	strcpy(mem[HexToDec(addr)],val);
 }
 
 void PrintASCII(int s, int e, int addr ){
 	// Function to output ASCII data of the line containing the address
-	
+
 	int i;
 	int dec;
 	printf("; ");
@@ -372,15 +494,13 @@ void Fill(){
 	int i,s,e;
 	char start[8],end[8],value[8];
 	strcpy(start, par[0]);
-	strcpy(end, par[1]);
-	strcpy(value, par[2]);
-	
-	printf("%s",value);
+	strcpy(end, par[2]);
+	strcpy(value, par[4]);
+
 	s = HexToDec(start);
 	e = HexToDec(end);
 	for(i=s; i<=e ; i++){
 		strcpy(mem[i],value);
-		printf("%s",mem[i]);
 	}
 }
 
@@ -403,7 +523,7 @@ int HexToDec(char* hex){
 
 void Reset(){
 	//Function to fill all memory '0'
-	
+
 	int i=0;
 	char tmpstr[] = "00";
 	for(i=0 ; i<MAX_MEMORY ; i++){
@@ -413,13 +533,17 @@ void Reset(){
 
 void Opcodelist(){
 	//Function to print opcode list
-	
+
 	int i=0,flag=0; //i:index , flag: if flag is 1, print '->'
 	opcode_list* tmp; //opcode_list pointer for searching
 
 	for(i=0 ; i<HASH_MOD ; i++){
 		printf("%d : ",i);
 		flag = 0;
+		if(hash[i].head == NULL) {
+			printf("empty\n");
+			continue;
+		}
 		for(tmp = hash[i].head; tmp!=NULL ; tmp=tmp->next){
 			if(flag) printf(" -> ");
 			else flag = 1;
@@ -441,7 +565,7 @@ int OpcodeMnemonic(){
 	int idx=0,i;		// idx: hash table index, i:index
 
 	strcpy(key, par[0]);
-	
+
 	for( i=0; i<(int)strlen(key) ; i++)	
 		idx += key[i];
 	idx%=HASH_MOD;
