@@ -3,11 +3,12 @@
 |                 System Programming Project 1                 |
 |                       ( SIC Shell )                          |
 |                                                              |
-|  created : Mar 18 ~ Mar 24, 2018                             |
+|  File    : 20161622.h (header file)                          |
+|  Created : Mar 18 ~ Mar 24, 2018                             |
 |  Author  : Ye-eun Lee                                        |
 |  Purpose :                                                   |
 |     1. Implementation of shell to execute assemblers, links  |
-|	    ,and loaders                                           |
+|        ,and loaders                                          |
 |     2. Implementation of memory space in which object code   |
 |        created by compilation is loaded and executed         |
 |     3. Implemettationof OPCODE table which converts mnemonic |
