@@ -1,11 +1,11 @@
 # System Pramming Project1 : SicShell
 
 ## Purpose
-'''
+```
 * Implementation of shell to execute assemblers, links, and loaders
 * Implementation of memory space in which object code created by compilation is loaded and executed
 * Implemettationof OPCODE table which converts mnemonic of SIC / XE machine to opcode value
-'''
+```
 
 ## Files
 ```20161622.c```	```20161622.h```	```Makefile```
