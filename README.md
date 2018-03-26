@@ -11,9 +11,9 @@
 '''20161622.c'''	'''20161622.h'''	''' Makefile'''
 
 ## How to run
-###To run this program  
+### To run this program  
 '''$ make''' then '''$ ./20161622.out'''
-###To delete .out file
+### To delete .out file
 '''$ make clean'''
 
 
